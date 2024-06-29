@@ -90,51 +90,42 @@ export default `
     </div>
 
     <script>
-        function isValidUrl(string) {
-            try {
-                new URL(string);
-                return true;
-            } catch (_) {
-                return false;
-            }
-        }
-
         async function shortenUrl() {
-            const original_url = document.getElementById('originalUrl').value;
-            const errorElement = document.getElementById('error');
-            errorElement.innerText = '';
+            const original_url = document.getElementById("originalUrl").value
+            const errorElement = document.getElementById("error")
+            errorElement.innerText = ""
 
-            if (!original_url) {
-                errorElement.innerText = 'Please enter a URL';
-                return;
-            }
-
-            if (!isValidUrl(original_url)) {
-                errorElement.innerText = 'Please enter a valid URL';
-                return;
-            }
+            if (!original_url) return (errorElement.innerText = "Please enter a URL")
 
             try {
-                const response = await fetch('/', {
-                    method: 'POST',
+                const response = await fetch("/", {
+                    method: "POST",
                     headers: {
-                        'Content-Type': 'application/json'
+                        "Content-Type": "application/json"
                     },
                     body: JSON.stringify({ original_url })
-                });
-                const data = await response.json();
+                })
+                
+                switch (response.status) {
+                    case 200:
+                        const data = await response.json()
+                        document.getElementById("result").innerHTML = \`
+                            <p>Shortened URL:</p>
+                            <a href="\${data.shortUrl}">\${"https://url-shortener-xcf.netlify.app/" + data.shortUrl}</a>
+                        \`
+                        break
 
-                if (response.ok) {
-                    document.getElementById('result').innerHTML = \`
-                        <p>Shortened URL:</p>
-                        <a href="\${data.shortUrl}">\${"https://url-shortener-xcf.netlify.app/" + data.shortUrl}</a>
-                    \`;
-                } else {
-                    document.getElementById('result').innerText = 'Error: ' + data.message;
+                    case 400:
+                        errorElement.innerText = "Please enter a valid URL"
+                        break
+
+                    default:
+                        document.getElementById("result").innerText = "Error: " + data.message
+                        break
                 }
             } catch (error) {
-                console.error('Error:', error);
-                document.getElementById('result').innerText = 'An error occurred. Please try again.';
+                console.error("Error:", error)
+                document.getElementById("result").innerText = "An error occurred. Please try again."
             }
         }
     </script>

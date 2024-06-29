@@ -1,4 +1,6 @@
 import { Router } from "express"
+import { URL } from "url"
+import { lookup } from "node:dns"
 import postgres from "postgres"
 import file from "./file"
 
@@ -9,12 +11,18 @@ router.get("/", (_req, res) => res.send(file))
 router.post("/", async (req, res) => {
     try {
         const { original_url } = req.body
-        const short_code = new Date().getTime().toString(36)
-        await sql`INSERT INTO urls ${sql({ original_url, short_code })}`
-        res.json({ shortUrl: short_code, original_url })
+        const url = new URL(original_url)
+
+        lookup(url.hostname, async (error) => {
+            if (error) return res.sendStatus(400)
+            const short_code = new Date().getTime().toString(36)
+            await sql`INSERT INTO urls ${sql({ original_url, short_code })}`
+            res.json({ shortUrl: short_code, original_url })
+        })
     } catch (error) {
-        console.error(error)
+        if (error instanceof Error && error.message === "Invalid URL") return res.sendStatus(400)
         res.status(500).json({ error: "An unknown error happen" })
+        console.log(error)
     }
 })
 
