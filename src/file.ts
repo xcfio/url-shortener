@@ -127,7 +127,7 @@ export default `
                 if (response.ok) {
                     document.getElementById('result').innerHTML = \`
                         <p>Shortened URL:</p>
-                        <a href="\${data.shortUrl}" target="_blank">\${data.shortUrl}</a>
+                        <a href="\${data.shortUrl}">\${"https://url-shortener-xcf.netlify.app/" + data.shortUrl}</a>
                     \`;
                 } else {
                     document.getElementById('result').innerText = 'Error: ' + data.message;

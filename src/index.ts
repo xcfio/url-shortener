@@ -11,7 +11,7 @@ router.post("/", async (req, res) => {
         const { original_url } = req.body
         const short_code = new Date().getTime().toString(36)
         await sql`INSERT INTO urls ${sql({ original_url, short_code })}`
-        res.json({ shortUrl: `${req.hostname}/${short_code}`, original_url })
+        res.json({ shortUrl: short_code, original_url })
     } catch (error) {
         console.error(error)
         res.status(500).json({ error: "An unknown error happen" })
