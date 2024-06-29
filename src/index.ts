@@ -32,3 +32,12 @@ router.get("/:code", async (req, res) => {
 
 router.use((_req, res) => res.status(404).json({ error: "Oh no... look like you entered wrong url" }))
 export default () => router
+
+/*
+-- create table
+CREATE TABLE urls (
+  id UUID PRIMARY KEY default gen_random_uuid(),
+  original_url TEXT NOT NULL,
+  short_code VARCHAR(10) NOT NULL UNIQUE
+);
+*/
