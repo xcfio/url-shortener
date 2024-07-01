@@ -6,7 +6,7 @@ import file from "./file"
 
 const router = Router()
 const sql = postgres(process.env.URI)
-let scam_website: Set<string>
+let scam_website: Set<string> = new Set()
 
 fetch("https://raw.githubusercontent.com/nikolaischunk/discord-phishing-links/main/domain-list.json")
     .then((buffer) => buffer.json())
@@ -29,7 +29,7 @@ router.get("/", (_req, res) => res.send(file))
 router.post("/", async (req, res) => {
     try {
         const url = new URL(req.body.original_url)
-        if (scam_website.has(url.href)) return res.sendStatus(400)
+        if (scam_website.has(url.hostname)) return res.sendStatus(400)
 
         lookup(url.hostname, async (invalid) => {
             if (invalid) return res.sendStatus(400)
