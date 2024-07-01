@@ -7,14 +7,6 @@ import file from "./file"
 const router = Router()
 const sql = postgres(process.env.URI)
 
-router.use((req, _res, next) => {
-    console.log(req.headers["client-ip"])
-    console.log(req.headers.accept)
-    console.log(req.headers["user-agent"])
-    console.log(req.headers["accept-language"])
-    next()
-})
-
 router.get("/", (_req, res) => res.send(file))
 router.post("/", async (req, res) => {
     try {
