@@ -1,13 +1,18 @@
-import { Router } from "express"
-import { URL } from "url"
 import { lookup } from "node:dns"
+import { Router } from "express"
+import { URL } from "node:url"
 import postgres from "postgres"
 import file from "./file"
 
 const router = Router()
 const sql = postgres(process.env.URI)
+let scam_website: Set<string>
 
-// TODO need to fix issue
+fetch("https://raw.githubusercontent.com/nikolaischunk/discord-phishing-links/main/domain-list.json")
+    .then((buffer) => buffer.json())
+    .then((data) => (scam_website = new Set<string>(data.domains as Array<string>)))
+    .catch(console.trace)
+
 router.use((req, _res, next) => {
     const ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress
     const language = req.headers["accept-language"]
@@ -23,19 +28,19 @@ router.use((req, _res, next) => {
 router.get("/", (_req, res) => res.send(file))
 router.post("/", async (req, res) => {
     try {
-        const { original_url } = req.body
-        const url = new URL(original_url)
+        const url = new URL(req.body.original_url)
+        if (scam_website.has(url.href)) return res.sendStatus(400)
 
         lookup(url.hostname, async (invalid) => {
             if (invalid) return res.sendStatus(400)
 
-            const exist = (await sql`SELECT short_code FROM urls WHERE original_url = ${original_url}`).shift()
-            if (exist) return res.json({ shortUrl: exist.short_code, original_url })
+            const exist = (await sql`SELECT short_code FROM urls WHERE original_url = ${url.href}`).shift()
+            if (exist) return res.json({ shortUrl: exist.short_code, original_url: url.href })
 
             const short_code = new Date().getTime().toString(36)
-            await sql`INSERT INTO urls ${sql({ original_url, short_code })}`
+            await sql`INSERT INTO urls ${sql({ original_url: url.href, short_code })}`
 
-            res.json({ shortUrl: short_code, original_url })
+            res.json({ shortUrl: short_code, original_url: url.href })
         })
     } catch (error) {
         if (error instanceof Error && error.message === "Invalid URL") return res.sendStatus(400)
@@ -46,10 +51,13 @@ router.post("/", async (req, res) => {
 
 router.get("/:code", async (req, res) => {
     try {
-        const { code } = req.params
-        const result = await sql`SELECT original_url FROM urls WHERE short_code = ${code}`
-        if (!result.length) return res.status(404).send("URL not found")
-        res.redirect(result[0].original_url)
+        const [result] = await sql<Array<{ original_url: string }>>`
+            SELECT original_url FROM urls 
+            WHERE short_code = ${req.params.code ?? ""}
+        `
+
+        if (!result) return res.status(404).send("URL not found")
+        res.redirect(result.original_url)
     } catch (error) {
         console.error(error)
         res.status(500).json({ error: "An unknown error happen" })
