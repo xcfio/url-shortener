@@ -7,9 +7,8 @@ import file from "./file"
 const router = Router()
 const sql = postgres(process.env.URI)
 
-// TODO need to remove before commit
 router.use((req, _res, next) => {
-    console.log(req.ip)
+    console.log(req.headers["client-ip"])
     console.log(req.headers.accept)
     console.log(req.headers["user-agent"])
     console.log(req.headers["accept-language"])
