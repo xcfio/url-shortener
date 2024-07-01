@@ -7,16 +7,30 @@ import file from "./file"
 const router = Router()
 const sql = postgres(process.env.URI)
 
+// TODO need to remove before commit
+router.use((req, _res, next) => {
+    console.log(req.ip)
+    console.log(req.headers.accept)
+    console.log(req.headers["user-agent"])
+    console.log(req.headers["accept-language"])
+    next()
+})
+
 router.get("/", (_req, res) => res.send(file))
 router.post("/", async (req, res) => {
     try {
         const { original_url } = req.body
         const url = new URL(original_url)
 
-        lookup(url.hostname, async (error) => {
-            if (error) return res.sendStatus(400)
+        lookup(url.hostname, async (invalid) => {
+            if (invalid) return res.sendStatus(400)
+
+            const exist = (await sql`SELECT short_code FROM urls WHERE original_url = ${original_url}`).shift()
+            if (exist) return res.json({ shortUrl: exist.short_code, original_url })
+
             const short_code = new Date().getTime().toString(36)
             await sql`INSERT INTO urls ${sql({ original_url, short_code })}`
+
             res.json({ shortUrl: short_code, original_url })
         })
     } catch (error) {
