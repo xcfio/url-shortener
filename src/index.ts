@@ -13,18 +13,6 @@ fetch("https://raw.githubusercontent.com/nikolaischunk/discord-phishing-links/ma
     .then((data) => (scam_website = new Set<string>(data.domains as Array<string>)))
     .catch(console.trace)
 
-router.use((req, _res, next) => {
-    const ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress
-    const language = req.headers["accept-language"]
-    const method = req.method
-    const url = req.url
-
-    console.log(method, url, ip, language)
-    console.log(req.headers.accept)
-    console.log(req.headers["user-agent"])
-    next()
-})
-
 router.get("/", (_req, res) => res.send(file))
 router.post("/", async (req, res) => {
     try {
@@ -34,11 +22,11 @@ router.post("/", async (req, res) => {
         lookup(url.hostname, async (invalid) => {
             if (invalid) return res.sendStatus(400)
 
-            const exist = (await sql`SELECT short_code FROM urls WHERE original_url = ${url.href}`).shift()
+            const exist = (await sql`SELECT short_code FROM url-shortener WHERE original_url = ${url.href}`).shift()
             if (exist) return res.json({ shortUrl: exist.short_code, original_url: url.href })
 
             const short_code = new Date().getTime().toString(36)
-            await sql`INSERT INTO urls ${sql({ original_url: url.href, short_code })}`
+            await sql`INSERT INTO url-shortener ${sql({ original_url: url.href, short_code })}`
 
             res.json({ shortUrl: short_code, original_url: url.href })
         })
@@ -52,7 +40,7 @@ router.post("/", async (req, res) => {
 router.get("/:code", async (req, res) => {
     try {
         const [result] = await sql<Array<{ original_url: string }>>`
-            SELECT original_url FROM urls 
+            SELECT original_url FROM url-shortener 
             WHERE short_code = ${req.params.code ?? ""}
         `
 
@@ -69,7 +57,7 @@ export default () => router
 
 /*
 -- create table
-CREATE TABLE urls (
+CREATE TABLE url_shortener (
   id UUID PRIMARY KEY default gen_random_uuid(),
   original_url TEXT NOT NULL,
   short_code VARCHAR(10) NOT NULL UNIQUE
