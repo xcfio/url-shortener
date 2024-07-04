@@ -22,11 +22,11 @@ router.post("/", async (req, res) => {
         lookup(url.hostname, async (invalid) => {
             if (invalid) return res.sendStatus(400)
 
-            const exist = (await sql`SELECT short_code FROM url-shortener WHERE original_url = ${url.href}`).shift()
+            const exist = (await sql`SELECT short_code FROM url_shortener WHERE original_url = ${url.href}`).shift()
             if (exist) return res.json({ shortUrl: exist.short_code, original_url: url.href })
 
             const short_code = new Date().getTime().toString(36)
-            await sql`INSERT INTO url-shortener ${sql({ original_url: url.href, short_code })}`
+            await sql`INSERT INTO url_shortener ${sql({ original_url: url.href, short_code })}`
 
             res.json({ shortUrl: short_code, original_url: url.href })
         })
@@ -40,7 +40,7 @@ router.post("/", async (req, res) => {
 router.get("/:code", async (req, res) => {
     try {
         const [result] = await sql<Array<{ original_url: string }>>`
-            SELECT original_url FROM url-shortener 
+            SELECT original_url FROM url_shortener 
             WHERE short_code = ${req.params.code ?? ""}
         `
 
