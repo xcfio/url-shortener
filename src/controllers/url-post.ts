@@ -6,10 +6,10 @@ import { URL } from "node:url"
 export function url_post(req: Request, res: Response) {
     try {
         const url = new URL(req.body.original_url ?? "")
-        if (isBlacklisted(url.hostname)) return res.status(400).json({ error: "Oh no... this url is blacklisted" })
+        if (isBlacklisted(url.hostname)) return res.status(403).json({ error: "Oh no... this url is blacklisted" })
 
         lookup(url.hostname, async (invalid) => {
-            if (invalid) return res.status(400).json({ error: "Invalid URL" })
+            if (invalid) return res.status(400).json({ error: "Please enter a valid URL" })
 
             const exist = (await sql`SELECT short_code FROM url_shortener WHERE original_url = ${url.href}`).shift()
             if (exist) return res.json({ shortUrl: exist.short_code, original_url: url.href })
@@ -20,9 +20,8 @@ export function url_post(req: Request, res: Response) {
             res.json({ shortUrl: short_code, original_url: url.href })
         })
     } catch (error) {
-        if (error instanceof Error && error.message === "Invalid URL") {
-            return res.status(400).json({ error: "Invalid URL" })
-        }
+        // prettier-ignore
+        if (error instanceof Error && error.message === "Invalid URL") return res.status(400).json({ error: "Please enter a valid URL" })
         res.status(500).json({ error: "An unknown error happen" })
         console.log(error)
     }

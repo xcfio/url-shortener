@@ -11,13 +11,14 @@ export function rate_limit(req: Request, res: Response, next: NextFunction) {
     const currentCount = requestCounts.get(clientIP)!
     requestCounts.set(clientIP, currentCount + 1)
 
-    if (currentCount >= MAX_REQUEST_COUNT) {
+    if (MAX_REQUEST_COUNT <= currentCount) {
         return res.status(429).json({ error: "Too many requests, please try again later." })
     }
+
     setTimeout(() => {
         const updatedCount = requestCounts.get(clientIP)! - 1
-        requestCounts.set(clientIP, 0)
-    }, WINDOW_SIZE_IN_MINUTES * 60 * 1000)
+        requestCounts.set(clientIP, Math.max(updatedCount, 0))
+    }, WINDOW_SIZE_IN_MINUTES * 60000)
 
     next()
 }
