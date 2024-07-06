@@ -110,7 +110,7 @@ export default `
                     case 200:
                         document.getElementById("result").innerHTML = \`
                             <p>Shortened URL:</p>
-                            <a href="\${data.shortUrl}">\${"https://url-shortener-xcf.netlify.app/" + data.shortUrl}</a>
+                            <a href="\${data.shortUrl}">\${"https://url-xcf.netlify.app/" + data.shortUrl}</a>
                         \`
                         break
 
