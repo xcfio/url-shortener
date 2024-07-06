@@ -88,7 +88,6 @@ export default `
         <div class="result" id="result"></div>
         <div class="error" id="error"></div>
     </div>
-
     <script>
         async function shortenUrl() {
             const original_url = document.getElementById("originalUrl").value
@@ -106,21 +105,17 @@ export default `
                     body: JSON.stringify({ original_url })
                 })
                 
+                const data = await response.json()
                 switch (response.status) {
                     case 200:
-                        const data = await response.json()
                         document.getElementById("result").innerHTML = \`
                             <p>Shortened URL:</p>
                             <a href="\${data.shortUrl}">\${"https://url-shortener-xcf.netlify.app/" + data.shortUrl}</a>
                         \`
                         break
 
-                    case 400:
-                        errorElement.innerText = "Please enter a valid URL"
-                        break
-
                     default:
-                        document.getElementById("result").innerText = "Error: " + data.message
+                        errorElement.innerText = data?.error ?? "An error occurred. Please try again."
                         break
                 }
             } catch (error) {
