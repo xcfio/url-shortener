@@ -3,10 +3,12 @@ import { isBlacklisted, sql } from "../utils"
 import { lookup } from "node:dns"
 import { URL } from "node:url"
 
-export function url_post(req: Request, res: Response) {
+export async function url_post(req: Request, res: Response) {
     try {
         const url = new URL(req.body.original_url ?? "")
-        if (isBlacklisted(url.hostname)) return res.status(403).json({ error: "Oh no... this url is blacklisted" })
+        if (await isBlacklisted(url.hostname)) {
+            return res.status(403).json({ error: "Oh no... this url is blacklisted" })
+        }
 
         lookup(url.hostname, async (invalid) => {
             if (invalid) return res.status(400).json({ error: "Please enter a valid URL" })
