@@ -24,7 +24,7 @@
     "dependencies": {
         "@netlify/functions": "^3.0.4",
         "dotenv": "^16.4.5",
-        "express": "^4.19.2",
+        "express": "^5.1.0",
         "postgres": "^3.4.4",
         "serverless-http": "^3.2.0"
     },
