@@ -22,7 +22,7 @@
         "test": "tsc --watch --noEmit"
     },
     "dependencies": {
-        "@netlify/functions": "^3.0.4",
+        "@netlify/functions": "^4.1.2",
         "dotenv": "^16.4.5",
         "express": "^5.1.0",
         "postgres": "^3.4.4",
