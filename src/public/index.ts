@@ -104,8 +104,8 @@ export default `
                     },
                     body: JSON.stringify({ original_url })
                 })
-                
-                const data = await response.json()
+
+                const data = JSON.parse(await response.text())
                 switch (response.status) {
                     case 200:
                         document.getElementById("result").innerHTML = \`
