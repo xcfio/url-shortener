@@ -18,7 +18,7 @@
         "url": "https://github.com/xcfio/url-shortener/issues"
     },
     "scripts": {
-        "build": "pnpm install --no-frozen-lockfile tsx",
+        "build": "pnpm install tsx",
         "start": "tsx src/index.ts",
         "dev": "tsx watch src/index.ts",
         "test": "tsc --watch --noEmit"
@@ -26,7 +26,8 @@
     "dependencies": {
         "@fastify/rate-limit": "^10.3.0",
         "fastify": "^5.4.0",
-        "postgres": "^3.4.4"
+        "postgres": "^3.4.4",
+        "tsx": "^4.20.3"
     },
     "devDependencies": {
         "@types/node": "^24.0.1"
