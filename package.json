@@ -18,7 +18,9 @@
         "url": "https://github.com/xcfio/url-shortener/issues"
     },
     "scripts": {
-        "dev": "netlify dev",
+        "build": "pnpm install --no-frozen-lockfile tsx",
+        "start": "tsx src/index.ts",
+        "dev": "tsx watch src/index.ts",
         "test": "tsc --watch --noEmit"
     },
     "dependencies": {
