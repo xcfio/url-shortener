@@ -12,7 +12,7 @@ fastify.post("/", url_post)
 fastify.get("/:code", url_redirect)
 
 export default async function handler(req: any, reply: any) {
-    await fastify.register(rl, { max: 20, timeWindow: "1 minute" })
     await fastify.ready()
+    await fastify.register(rl, { max: 20, timeWindow: "1 minute" })
     fastify.server.emit("request", req, reply)
 }
