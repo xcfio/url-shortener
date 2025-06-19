@@ -19,7 +19,7 @@ export async function url_post(request: FastifyRequest, reply: FastifyReply) {
         const short_code = new Date().getTime().toString(36)
         await sql`INSERT INTO url_shortener ${sql({ original_url: url.href, short_code })}`
 
-        return { shortUrl: short_code, original_url: url.href }
+        return { short: short_code, original: url.href }
     } catch (error) {
         // prettier-ignore
         if (error instanceof Error && error.message === "Invalid URL") return reply.status(400).send({ error: "Please enter a valid URL" })
