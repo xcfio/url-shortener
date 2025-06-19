@@ -3,7 +3,7 @@ import file from "./public"
 import rl from "@fastify/rate-limit"
 import Router from "fastify"
 
-const fastify = Router()
+const fastify = Router({ logger: true })
 
 fastify.get("/", (_, reply) => reply.type("text/html").send(file))
 fastify.get("/status", (_, reply) => reply.code(200).send({ status: "ok" }))
@@ -11,8 +11,14 @@ fastify.get("/status", (_, reply) => reply.code(200).send({ status: "ok" }))
 fastify.post("/", url_post)
 fastify.get("/:code", url_redirect)
 
-export default async function handler(req: any, reply: any) {
-    await fastify.ready()
-    await fastify.register(rl, { max: 20, timeWindow: "1 minute" })
-    fastify.server.emit("request", req, reply)
-}
+fastify.register(rl, { max: 20, timeWindow: "1 minute" })
+
+const port = Number(process.env.PORT || 3000)
+const host = "RENDER" in process.env ? `0.0.0.0` : `localhost`
+
+fastify.listen({ host: host, port: port }, function (err, address) {
+    if (err) {
+        fastify.log.error(err)
+        process.exit(1)
+    }
+})
