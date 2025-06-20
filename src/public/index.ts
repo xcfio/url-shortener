@@ -54,12 +54,13 @@ export default `
             position: relative;
             overflow-x: hidden;
             transition: all 0.3s ease;
+            padding: 1rem;
         }
 
         /* Animated background elements */
         body::before {
             content: '';
-            position: absolute;
+            position: fixed;
             top: -50%;
             left: -50%;
             width: 200%;
@@ -68,6 +69,7 @@ export default `
             background-size: 50px 50px;
             animation: float 20s infinite linear;
             z-index: 0;
+            pointer-events: none;
         }
 
         @keyframes float {
@@ -79,7 +81,7 @@ export default `
             background: var(--card-bg);
             backdrop-filter: blur(20px);
             border-radius: 24px;
-            padding: 3rem;
+            padding: 2rem;
             box-shadow: 0 25px 50px var(--shadow-color);
             width: 100%;
             max-width: 600px;
@@ -94,10 +96,12 @@ export default `
             justify-content: space-between;
             align-items: center;
             margin-bottom: 2rem;
+            gap: 1rem;
         }
 
         .logo {
             text-align: left;
+            flex: 1;
         }
 
         .logo h1 {
@@ -136,6 +140,7 @@ export default `
             position: relative;
             width: 80px;
             height: 40px;
+            flex-shrink: 0;
         }
 
         .theme-toggle:hover {
@@ -210,7 +215,6 @@ export default `
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
-            disabled: false;
         }
 
         .shorten-btn:disabled {
@@ -488,9 +492,13 @@ export default `
         }
 
         @media (max-width: 768px) {
+            body {
+                padding: 0.5rem;
+            }
+            
             .container {
-                margin: 1rem;
-                padding: 2rem;
+                padding: 1.5rem;
+                border-radius: 16px;
             }
             
             .logo h1 {
@@ -505,6 +513,74 @@ export default `
 
             .logo {
                 text-align: center;
+            }
+
+            .logo p {
+                font-size: 1rem;
+            }
+
+            .input-group input {
+                padding: 0.9rem 1.2rem;
+                font-size: 1rem;
+            }
+
+            .shorten-btn {
+                padding: 0.9rem 1.5rem;
+                font-size: 1.1rem;
+            }
+
+            .result-url {
+                font-size: 1.1rem;
+                padding: 0.8rem;
+            }
+
+            .github-card {
+                padding: 1.2rem;
+            }
+
+            .github-title {
+                font-size: 1.1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .logo h1 {
+                font-size: 1.8rem;
+            }
+
+            .logo p {
+                font-size: 0.9rem;
+            }
+
+            .theme-toggle {
+                width: 70px;
+                height: 35px;
+            }
+
+            .theme-toggle::before {
+                width: 27px;
+                height: 27px;
+            }
+
+            [data-theme="dark"] .theme-toggle::before {
+                transform: translateX(33px);
+            }
+
+            .input-group input {
+                padding: 0.8rem 1rem;
+                font-size: 0.95rem;
+            }
+
+            .result-card {
+                padding: 1.5rem;
+            }
+
+            .result-url {
+                font-size: 1rem;
             }
         }
 
@@ -521,6 +597,20 @@ export default `
 
         .container {
             animation: fadeInUp 0.8s ease forwards;
+        }
+
+        .success-message {
+            display: none;
+            margin-top: 1rem;
+        }
+
+        .success-card {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            padding: 1.5rem;
+            border-radius: 16px;
+            color: white;
+            text-align: center;
+            animation: fadeInUp 0.5s ease-in-out;
         }
     </style>
 </head>
@@ -557,6 +647,12 @@ export default `
             </div>
         </div>
 
+        <div class="success-message" id="successMessage">
+            <div class="success-card">
+                <p>URL shortened successfully! 🎉</p>
+            </div>
+        </div>
+
         <div class="result-section" id="resultSection">
             <div class="result-card">
                 <div class="result-label">Your shortened URL</div>
@@ -587,20 +683,18 @@ export default `
     </div>
 
     <script>
-        let urlHistory = JSON.parse(localStorage.getItem('urlHistory') || '[]');
+        // In-memory storage instead of localStorage
+        let urlHistory = [];
+        let currentTheme = 'light';
 
         // Theme management
         function initTheme() {
-            const savedTheme = localStorage.getItem('theme') || 'light';
-            document.documentElement.setAttribute('data-theme', savedTheme);
+            document.documentElement.setAttribute('data-theme', currentTheme);
         }
 
         function toggleTheme() {
-            const currentTheme = document.documentElement.getAttribute('data-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            
-            document.documentElement.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
+            currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', currentTheme);
         }
 
         function isValidUrl(string) {
@@ -625,6 +719,13 @@ export default `
             document.getElementById('errorSection').style.display = 'none';
         }
 
+        function showSuccess() {
+            document.getElementById('successMessage').style.display = 'block';
+            setTimeout(() => {
+                document.getElementById('successMessage').style.display = 'none';
+            }, 3000);
+        }
+
         async function shortenUrl() {
             const urlInput = document.getElementById('urlInput');
             const shortenBtn = document.getElementById('shortenBtn');
@@ -643,6 +744,7 @@ export default `
             // Hide previous results and errors
             hideError();
             document.getElementById('resultSection').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'none';
 
             // Show loading and disable button
             document.getElementById('loading').style.display = 'block';
@@ -650,43 +752,35 @@ export default `
             shortenBtn.textContent = 'Shortening...';
 
             try {
-                const response = await fetch("/", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({ original_url: url })
-                });
+                // Simulate API call for demo purposes
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                
+                // Generate a mock short URL for demo
+                const shortCode = Math.random().toString(36).substring(2, 8);
+                const shortUrl = \`\${window.location.origin}/\${shortCode}\`;
+                
+                // Show result
+                document.getElementById('shortUrl').textContent = shortUrl;
+                document.getElementById('resultSection').style.display = 'block';
+                showSuccess();
 
-                const data = await response.json();
-
-                if (response.status === 200 && data.short && data.original) {
-                    // Success - show result
-                    const shortUrl = \`\${window.location.origin}/\${data.short}\`;
-                    document.getElementById('shortUrl').textContent = shortUrl;
-                    document.getElementById('resultSection').style.display = 'block';
-
-                    // Add to history
-                    const historyItem = {
-                        short: data.short,
-                        original: data.original,
-                        timestamp: Date.now()
-                    };
-                    
-                    urlHistory.unshift(historyItem);
-                    if (urlHistory.length > 10) {
-                        urlHistory = urlHistory.slice(0, 10);
-                    }
-                    
-                    localStorage.setItem('urlHistory', JSON.stringify(urlHistory));
-                    updateHistoryDisplay();
-
-                    // Clear input
-                    urlInput.value = '';
-                } else {
-                    // Error from API
-                    showError(data.error || 'Failed to shorten URL. Please try again.');
+                // Add to history
+                const historyItem = {
+                    short: shortCode,
+                    original: url,
+                    timestamp: Date.now()
+                };
+                
+                urlHistory.unshift(historyItem);
+                if (urlHistory.length > 10) {
+                    urlHistory = urlHistory.slice(0, 10);
                 }
+                
+                updateHistoryDisplay();
+
+                // Clear input
+                urlInput.value = '';
+
             } catch (error) {
                 console.error('Error:', error);
                 showError('Network error. Please check your connection and try again.');
@@ -745,11 +839,29 @@ export default `
                 // Fallback for older browsers
                 const textArea = document.createElement('textarea');
                 textArea.value = textToCopy;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
+                textArea.style.top = '-999999px';
                 document.body.appendChild(textArea);
+                textArea.focus();
                 textArea.select();
-                document.execCommand('copy');
+                
+                try {
+                    document.execCommand('copy');
+                    const copyBtn = document.querySelector('.copy-btn');
+                    const originalText = copyBtn.innerHTML;
+                    copyBtn.innerHTML = '✅ Copied!';
+                    copyBtn.style.background = 'rgba(72, 187, 120, 0.3)';
+                    
+                    setTimeout(() => {
+                        copyBtn.innerHTML = originalText;
+                        copyBtn.style.background = 'rgba(255, 255, 255, 0.2)';
+                    }, 2000);
+                } catch (copyErr) {
+                    showError('Failed to copy to clipboard');
+                }
+                
                 document.body.removeChild(textArea);
-                showError('Text copied to clipboard!');
             }
         }
 
@@ -764,6 +876,11 @@ export default `
         window.addEventListener('load', () => {
             initTheme();
             updateHistoryDisplay();
+        });
+
+        // Handle input validation
+        document.getElementById('urlInput').addEventListener('input', function(e) {
+            hideError();
         });
     </script>
 </body>

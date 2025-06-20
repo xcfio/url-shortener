@@ -14,12 +14,12 @@ export async function url_post(request: FastifyRequest, reply: FastifyReply) {
         await promisify(lookup)(url.hostname)
 
         const exist = (await sql`SELECT short_code FROM url_shortener WHERE original_url = ${url.href}`).shift()
-        if (exist) return { shortUrl: exist.short_code, original_url: url.href }
+        if (exist) return { short: exist.short_code, original: url.href }
 
-        const short_code = new Date().getTime().toString(36)
-        await sql`INSERT INTO url_shortener ${sql({ original_url: url.href, short_code })}`
+        const short = new Date().getTime().toString(36)
+        await sql`INSERT INTO url_shortener ${sql({ original_url: url.href, short_code: short })}`
 
-        return { short: short_code, original: url.href }
+        return { short, original: url.href }
     } catch (error) {
         // prettier-ignore
         if (error instanceof Error && error.message === "Invalid URL") return reply.status(400).send({ error: "Please enter a valid URL" })
